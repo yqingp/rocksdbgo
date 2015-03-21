@@ -15,6 +15,10 @@ type ReadOption struct {
 	Option *C.rocksdb_readoptions_t
 }
 
+type Option struct {
+	Option *C.rocksdb_options_t
+}
+
 func NewWriteOption() *WriteOption {
 	opt := &WriteOption{}
 	opt.Option = C.rocksdb_writeoptions_create()
@@ -32,6 +36,18 @@ func NewReadOption() *ReadOption {
 
 	return opt
 }
+
 func (r *ReadOption) Close() {
 	C.rocksdb_readoptions_destroy(r.Option)
+}
+
+func NewOption() *Option {
+	opt := &Option{}
+	opt.Option = C.rocksdb_options_create()
+
+	return opt
+}
+
+func (o *Option) Close() {
+	C.rocksdb_options_destroy(o.Option)
 }

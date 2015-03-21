@@ -17,43 +17,46 @@ import (
 type DB struct {
 	rocksdb             *C.rocksdb_t
 	rocksdbBackupEngine *C.rocksdb_backup_engine_t
-	rocksdbOptions      *C.rocksdb_options_t
-	// wirteoptions        *C.rocksdb_writeoptions_t
-	// readoptions         *C.rocksdb_readoptions_t
+	writeOption         *WriteOption
+	readOption          *ReadOption
+	option              *Option
 }
 
 func Open(dbpath string) (*DB, error) {
 	db := &DB{}
 
-	db.rocksdbOptions = C.rocksdb_options_create()
+	db.option = NewOption()
 
-	C.rocksdb_options_increase_parallelism(db.rocksdbOptions, C.int(runtime.NumCPU()))
-	C.rocksdb_options_optimize_level_style_compaction(db.rocksdbOptions, 0)
-	C.rocksdb_options_set_create_if_missing(db.rocksdbOptions, 1)
+	C.rocksdb_options_increase_parallelism(db.option.Option, C.int(runtime.NumCPU()))
+	C.rocksdb_options_optimize_level_style_compaction(db.option.Option, 0)
+	C.rocksdb_options_set_create_if_missing(db.option.Option, 1)
 
 	dbpathCstring := C.CString(dbpath)
 
 	var errInfo *C.char
 
-	db.rocksdb = C.rocksdb_open(db.rocksdbOptions, dbpathCstring, &errInfo)
+	db.rocksdb = C.rocksdb_open(db.option.Option, dbpathCstring, &errInfo)
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
 		return nil, errors.New(fmt.Sprintf("Store Rocksdb [Open] Error %s", er))
 	}
 
+	db.readOption = NewReadOption()
+	db.writeOption = NewWriteOption()
+
 	C.free(unsafe.Pointer(dbpathCstring))
 
 	return db, nil
 }
 
-func (this *DB) Put(option *WriteOption, key []byte, value []byte) error {
+func (this *DB) Put(key []byte, value []byte) error {
 	var errInfo *C.char
 
 	k := C.CString(string(key))
 	v := C.CString(string(value))
 
-	C.rocksdb_put(this.rocksdb, option.Option, k, C.size_t(len(key)), v, C.size_t(len(value)), &errInfo)
+	C.rocksdb_put(this.rocksdb, this.writeOption.Option, k, C.size_t(len(key)), v, C.size_t(len(value)), &errInfo)
 
 	C.free(unsafe.Pointer(k))
 	C.free(unsafe.Pointer(v))
@@ -66,13 +69,13 @@ func (this *DB) Put(option *WriteOption, key []byte, value []byte) error {
 	return nil
 }
 
-func (this *DB) Get(option *ReadOption, key []byte) ([]byte, error) {
+func (this *DB) Get(key []byte) ([]byte, error) {
 	k := C.CString(string(key))
 	defer C.free(unsafe.Pointer(k))
 	var l C.size_t
 	var errInfo, value *C.char
 
-	value = C.rocksdb_get(this.rocksdb, option.Option, k, C.size_t(len(key)), &l, &errInfo)
+	value = C.rocksdb_get(this.rocksdb, this.readOption.Option, k, C.size_t(len(key)), &l, &errInfo)
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
@@ -83,13 +86,13 @@ func (this *DB) Get(option *ReadOption, key []byte) ([]byte, error) {
 	return v, nil
 }
 
-func (this *DB) Delete(option *WriteOption, key []byte) error {
+func (this *DB) Delete(key []byte) error {
 	k := C.CString(string(key))
 	defer C.free(unsafe.Pointer(k))
 
 	var l C.size_t
 	var errInfo *C.char
-	C.rocksdb_delete(this.rocksdb, option.Option, k, l, &errInfo)
+	C.rocksdb_delete(this.rocksdb, this.writeOption.Option, k, l, &errInfo)
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
@@ -100,9 +103,9 @@ func (this *DB) Delete(option *WriteOption, key []byte) error {
 }
 
 func (this *DB) Close() {
-	// C.rocksdb_writeoptions_destroy(this.wirteoptions)
-	// C.rocksdb_readoptions_destroy(this.readoptions)
-	C.rocksdb_options_destroy(this.rocksdbOptions)
+	this.writeOption.Close()
+	this.readOption.Close()
+	this.option.Close()
 	C.rocksdb_close(this.rocksdb)
 }
 
