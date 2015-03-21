@@ -10,56 +10,58 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	"runtime"
 	"unsafe"
 )
 
 type DB struct {
-	rocksdb             *C.rocksdb_t
-	rocksdbBackupEngine *C.rocksdb_backup_engine_t
-	writeOption         *WriteOption
-	readOption          *ReadOption
-	option              *Option
+	Rocksdb            *C.rocksdb_t
+	DefaultWriteOption *WriteOption
+	DefaultReadOption  *ReadOption
+	Option             *Option
+	FlashOption        *FlushOption
 }
 
-func Open(dbpath string) (*DB, error) {
+func Open(dbpath string, option *Option) (*DB, error) {
 	db := &DB{}
 
-	db.option = NewOption()
-
-	C.rocksdb_options_increase_parallelism(db.option.Option, C.int(runtime.NumCPU()))
-	C.rocksdb_options_optimize_level_style_compaction(db.option.Option, 0)
-	C.rocksdb_options_set_create_if_missing(db.option.Option, 1)
-
 	dbpathCstring := C.CString(dbpath)
+	defer C.free(unsafe.Pointer(dbpathCstring))
 
 	var errInfo *C.char
 
-	db.rocksdb = C.rocksdb_open(db.option.Option, dbpathCstring, &errInfo)
+	if option == nil {
+		db.Option = NewOption()
+		db.Option.SetCreateIfMissing(true)
+	}
+
+	db.Rocksdb = C.rocksdb_open(db.Option.Option, dbpathCstring, &errInfo)
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
 		return nil, errors.New(fmt.Sprintf("Store Rocksdb [Open] Error %s", er))
 	}
 
-	db.readOption = NewReadOption()
-	db.writeOption = NewWriteOption()
-
-	C.free(unsafe.Pointer(dbpathCstring))
+	db.DefaultReadOption = NewReadOption()
+	db.DefaultWriteOption = NewWriteOption()
 
 	return db, nil
 }
 
-func (this *DB) Put(key []byte, value []byte) error {
+func (this *DB) Put(wo *WriteOption, key []byte, value []byte) error {
 	var errInfo *C.char
 
-	k := C.CString(string(key))
-	v := C.CString(string(value))
+	k, v := C.CString(string(key)), C.CString(string(value))
+	defer func() {
+		C.free(unsafe.Pointer(k))
+		C.free(unsafe.Pointer(v))
+	}()
 
-	C.rocksdb_put(this.rocksdb, this.writeOption.Option, k, C.size_t(len(key)), v, C.size_t(len(value)), &errInfo)
+	w := this.DefaultWriteOption.Option
+	if wo != nil {
+		w = wo.Option
+	}
 
-	C.free(unsafe.Pointer(k))
-	C.free(unsafe.Pointer(v))
+	C.rocksdb_put(this.Rocksdb, w, k, C.size_t(len(key)), v, C.size_t(len(value)), &errInfo)
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
@@ -69,13 +71,19 @@ func (this *DB) Put(key []byte, value []byte) error {
 	return nil
 }
 
-func (this *DB) Get(key []byte) ([]byte, error) {
-	k := C.CString(string(key))
-	defer C.free(unsafe.Pointer(k))
+func (this *DB) Get(ro *ReadOption, key []byte) ([]byte, error) {
 	var l C.size_t
 	var errInfo, value *C.char
 
-	value = C.rocksdb_get(this.rocksdb, this.readOption.Option, k, C.size_t(len(key)), &l, &errInfo)
+	k := C.CString(string(key))
+	defer C.free(unsafe.Pointer(k))
+
+	r := this.DefaultReadOption.Option
+	if ro != nil {
+		r = ro.Option
+	}
+
+	value = C.rocksdb_get(this.Rocksdb, r, k, C.size_t(len(key)), &l, &errInfo)
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
@@ -83,16 +91,23 @@ func (this *DB) Get(key []byte) ([]byte, error) {
 	}
 
 	v := C.GoBytes(unsafe.Pointer(value), C.int(l))
+
 	return v, nil
 }
 
-func (this *DB) Delete(key []byte) error {
+func (this *DB) Delete(wo *WriteOption, key []byte) error {
+	var l C.size_t
+	var errInfo *C.char
+
 	k := C.CString(string(key))
 	defer C.free(unsafe.Pointer(k))
 
-	var l C.size_t
-	var errInfo *C.char
-	C.rocksdb_delete(this.rocksdb, this.writeOption.Option, k, l, &errInfo)
+	w := this.DefaultWriteOption.Option
+	if wo != nil {
+		w = wo.Option
+	}
+
+	C.rocksdb_delete(this.Rocksdb, w, k, l, &errInfo)
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
@@ -103,12 +118,38 @@ func (this *DB) Delete(key []byte) error {
 }
 
 func (this *DB) Close() {
-	this.writeOption.Close()
-	this.readOption.Close()
-	this.option.Close()
-	C.rocksdb_close(this.rocksdb)
+	this.DefaultWriteOption.Close()
+	this.DefaultReadOption.Close()
+	this.Option.Close()
+	C.rocksdb_close(this.Rocksdb)
 }
 
 func (d *DB) String() string {
 	return ""
 }
+
+// extern void rocksdb_delete_file(rocksdb_t* db, const char* name);
+
+// extern const rocksdb_livefiles_t* rocksdb_livefiles(rocksdb_t* db);
+
+// extern void rocksdb_flush(rocksdb_t* db,const rocksdb_flushoptions_t* options,char** errptr);
+func (d *DB) Flush() error {
+	if d.FlashOption == nil {
+		return errors.New("undefined FlashOption")
+	}
+
+	var errInfo *C.char
+
+	C.rocksdb_flush(d.Rocksdb, d.FlashOption.Option, &errInfo)
+
+	if errInfo != nil {
+		er := C.GoString(errInfo)
+		return errors.New(er)
+	}
+
+	return nil
+}
+
+// extern void rocksdb_disable_file_deletions(rocksdb_t* db,char** errptr);
+
+// extern void rocksdb_enable_file_deletions(rocksdb_t* db,unsigned char force, char** errptr);

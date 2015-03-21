@@ -18,24 +18,24 @@ func TestOpen(t *testing.T) {
 }
 
 func TestPut(t *testing.T) {
-	db, err := Open("./a")
+	db, err := Open("./a", nil)
 
 	if err != nil {
 		t.Errorf("db open error: %s", err)
 	}
 
-	db.Put([]byte("a"), []byte("b"))
+	db.Put(nil, []byte("a"), []byte("b"))
 	db.Close()
 }
 
 func TestGet(t *testing.T) {
-	db, err := Open("./a")
+	db, err := Open("./a", nil)
 
 	if err != nil {
 		t.Errorf("db open error: %s", err)
 	}
 
-	v, err := db.Get([]byte("a"))
+	v, err := db.Get(nil, []byte("a"))
 
 	if !bytes.Equal([]byte("b"), v) {
 		t.Errorf("expected [%s], actual [%s]; error %s", "a", v, err)

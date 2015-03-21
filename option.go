@@ -7,40 +7,11 @@ package rocksdbgo
 */
 import "C"
 
-type WriteOption struct {
-	Option *C.rocksdb_writeoptions_t
-}
-
-type ReadOption struct {
-	Option *C.rocksdb_readoptions_t
-}
-
 type Option struct {
 	Option *C.rocksdb_options_t
 }
 
-func NewWriteOption() *WriteOption {
-	opt := &WriteOption{}
-	opt.Option = C.rocksdb_writeoptions_create()
-
-	return opt
-}
-
-func (w *WriteOption) Close() {
-	C.rocksdb_writeoptions_destroy(w.Option)
-}
-
-func NewReadOption() *ReadOption {
-	opt := &ReadOption{}
-	opt.Option = C.rocksdb_readoptions_create()
-
-	return opt
-}
-
-func (r *ReadOption) Close() {
-	C.rocksdb_readoptions_destroy(r.Option)
-}
-
+// extern rocksdb_options_t* rocksdb_options_create();
 func NewOption() *Option {
 	opt := &Option{}
 	opt.Option = C.rocksdb_options_create()
@@ -48,6 +19,22 @@ func NewOption() *Option {
 	return opt
 }
 
+// extern void rocksdb_options_increase_parallelism(rocksdb_options_t* opt, int total_threads);
+func (o *Option) IncreaseParallelism(n int) {
+	C.rocksdb_options_increase_parallelism(o.Option, C.int(n))
+}
+
+// extern void rocksdb_options_destroy(rocksdb_options_t*);
 func (o *Option) Close() {
 	C.rocksdb_options_destroy(o.Option)
+}
+
+// extern void rocksdb_options_set_create_if_missing(rocksdb_options_t*, unsigned char);
+func (o *Option) SetCreateIfMissing(b bool) {
+	t := 0
+	if b {
+		t = 1
+	}
+
+	C.rocksdb_options_set_create_if_missing(o.Option, C.uchar(t))
 }
