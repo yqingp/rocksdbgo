@@ -70,7 +70,7 @@ func (this *DB) Put(key []byte, value []byte) error {
 
 func (this *DB) Get(key []byte) ([]byte, error) {
 	k := C.CString(string(key))
-
+	defer C.free(unsafe.Pointer(k))
 	var l C.size_t
 	var errInfo, value *C.char
 
@@ -83,6 +83,10 @@ func (this *DB) Get(key []byte) ([]byte, error) {
 
 	v := C.GoBytes(unsafe.Pointer(value), C.int(l))
 	return v, nil
+}
+
+func (this *DB) Delete(key []byte) error {
+	k
 }
 
 func (this *DB) Close() {
