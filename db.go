@@ -68,7 +68,7 @@ func (this *DB) Put(key []byte, value []byte) error {
 	return nil
 }
 
-func (this *DB) Get(key []byte) (string, error) {
+func (this *DB) Get(key []byte) ([]byte, error) {
 	k := C.CString(string(key))
 
 	var l C.size_t
@@ -78,10 +78,10 @@ func (this *DB) Get(key []byte) (string, error) {
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
-		return "", errors.New(fmt.Sprintf("Store Rocksdb [Get] Error %s", er))
+		return nil, errors.New(fmt.Sprintf("Store Rocksdb [Get] Error %s", er))
 	}
 
-	v := C.GoString(value)
+	v := C.GoBytes(unsafe.Pointer(value), C.int(l))
 	return v, nil
 }
 
