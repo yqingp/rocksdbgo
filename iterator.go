@@ -28,3 +28,16 @@ extern void rocksdb_iter_destroy(rocksdb_iterator_t*);
 func (i *Iterator) Close() {
 	C.rocksdb_iter_destroy(i.Iterator)
 }
+
+/*
+extern void rocksdb_iter_destroy(rocksdb_iterator_t*);
+extern unsigned char rocksdb_iter_valid(const rocksdb_iterator_t*);
+extern void rocksdb_iter_seek_to_first(rocksdb_iterator_t*);
+extern void rocksdb_iter_seek_to_last(rocksdb_iterator_t*);
+extern void rocksdb_iter_seek(rocksdb_iterator_t*, const char* k, size_t klen);
+extern void rocksdb_iter_next(rocksdb_iterator_t*);
+extern void rocksdb_iter_prev(rocksdb_iterator_t*);
+extern const char* rocksdb_iter_key(const rocksdb_iterator_t*, size_t* klen);
+extern const char* rocksdb_iter_value(const rocksdb_iterator_t*, size_t* vlen);
+extern void rocksdb_iter_get_error(const rocksdb_iterator_t*, char** errptr);
+*/
