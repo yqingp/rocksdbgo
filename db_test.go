@@ -24,7 +24,10 @@ func TestPut(t *testing.T) {
 		t.Errorf("db open error: %s", err)
 	}
 
-	db.Put([]byte("a"), []byte("b"))
+	option := NewWriteOption()
+
+	db.Put(option, []byte("a"), []byte("b"))
+	option.Close()
 	db.Close()
 }
 
@@ -35,17 +38,13 @@ func TestGet(t *testing.T) {
 		t.Errorf("db open error: %s", err)
 	}
 
-	v, err := db.Get([]byte("a"))
+	option := NewReadOption()
+	v, err := db.Get(option, []byte("a"))
 
 	if !bytes.Equal([]byte("b"), v) {
 		t.Errorf("expected [%s], actual [%s]; error %s", "a", v, err)
 	}
-
-	// v1, err := db.Get([]byte("b"))
-
-	// if !strings.EqualFold("", v1) {
-	// 	t.Errorf("expected [%s], actual [%s]", "", v1)
-	// }
+	option.Close()
 
 	db.Close()
 }
