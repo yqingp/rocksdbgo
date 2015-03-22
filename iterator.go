@@ -8,7 +8,15 @@ package rocksdbgo
 import "C"
 
 type Iterator struct {
-	Iterator *C.rocksdb_iterator_t
+	Iterator  *C.rocksdb_iterator_t
+	forward   bool
+	start     string
+	startChar *C.char
+	startLen  *C.size_t
+	end       string
+	endChar   *C.char
+	endLen    *C.size_t
+	isFirst   bool
 }
 
 /*
@@ -16,10 +24,83 @@ extern rocksdb_iterator_t* rocksdb_create_iterator(
     rocksdb_t* db,
     const rocksdb_readoptions_t* options);
 */
-func newIterator(db *DB, ro *ReadOption) *Iterator {
-	return &Iterator{
+func newIterator(db *DB, ro *ReadOption, forward bool, start string, end string) *Iterator {
+	i := Iterator{
 		Iterator: C.rocksdb_create_iterator(db.Rocksdb, ro.Option),
 	}
+
+	i.isFirst = true
+
+	if forward {
+		i.Forward()
+	} else {
+		i.Backward()
+	}
+
+	return i
+}
+
+/*
+extern void rocksdb_iter_seek_to_first(rocksdb_iterator_t*);
+*/
+func (i *Iterator) Forward() {
+	i.forward = true
+	C.rocksdb_iter_seek_to_first(i.Iterator)
+}
+
+/*
+extern void rocksdb_iter_seek_to_last(rocksdb_iterator_t*);
+*/
+func (i *Iterator) Backward() {
+	i.forward = false
+	C.rocksdb_iter_seek_to_last(i.Iterator)
+}
+
+/*
+extern void rocksdb_iter_seek(rocksdb_iterator_t*, const char* k, size_t klen);
+*/
+func (i *Iterator) seek() {
+	C.rocksdb_iter_seek(i.Iterator, i.startChar)
+}
+
+func (i *Iterator) Start(start string) {
+	if start != "" {
+		i.start = start
+		i.startChar = C.CString(start)
+		i.startLen = C.size_t(len([]byte(start)))
+		i.seek()
+	}
+}
+
+func (i *Iterator) End(end string) {
+	if end != "" {
+		i.end = end
+		i.endChar = C.CString(end)
+		i.endLen = C.size_t(len([]byte(end)))
+	}
+}
+
+func (i *Iterator) ResetDirection() {
+	if i.forward {
+		i.Forward()
+	} else {
+		i.Backward()
+	}
+}
+
+func (i *Iterator) Next() (string, bool) {
+	if i.isFirst {
+		if i.valid() {
+
+		}
+	}
+}
+
+/*
+extern unsigned char rocksdb_iter_valid(const rocksdb_iterator_t*);
+*/
+func (i *Iterator) valid() bool {
+	return C.rocksdb_iter_valid(i.Iterator) == C.uchar(1)
 }
 
 /*
@@ -31,10 +112,6 @@ func (i *Iterator) Close() {
 
 /*
 extern void rocksdb_iter_destroy(rocksdb_iterator_t*);
-extern unsigned char rocksdb_iter_valid(const rocksdb_iterator_t*);
-extern void rocksdb_iter_seek_to_first(rocksdb_iterator_t*);
-extern void rocksdb_iter_seek_to_last(rocksdb_iterator_t*);
-extern void rocksdb_iter_seek(rocksdb_iterator_t*, const char* k, size_t klen);
 extern void rocksdb_iter_next(rocksdb_iterator_t*);
 extern void rocksdb_iter_prev(rocksdb_iterator_t*);
 extern const char* rocksdb_iter_key(const rocksdb_iterator_t*, size_t* klen);

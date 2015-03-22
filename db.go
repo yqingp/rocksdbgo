@@ -154,11 +154,11 @@ func (d *DB) Flush() error {
 
 // extern void rocksdb_enable_file_deletions(rocksdb_t* db,unsigned char force, char** errptr);
 
-func (d *DB) NewIterator(ro *ReadOption) *Iterator {
+func (d *DB) NewIterator(ro *ReadOption, forward bool, start string, end string) *Iterator {
 	r := d.DefaultReadOption
 	if ro != nil {
 		r = ReadOption
 	}
 
-	return newIterator(d, r)
+	return newIterator(d, r, forward)
 }
