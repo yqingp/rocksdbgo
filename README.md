@@ -24,7 +24,7 @@ db.Put(nil, []byte("d2"), []byte("v"))
 
 v, err := db.Get(nil, []byte("a1"))
 
-
+db.Delete(nil, []byte("a1"))
 
 it := db.NewIterator(nil, true, "", "") //forward
 // it := db.NewIterator(nil, false, "", "") //backward
