@@ -40,3 +40,9 @@ it.Close()
 db.Close()
 os.RemoveAll("./a")
 ```
+
+
+##TODO
+	添加write_batch操作
+	添加更多测试
+	添加其他优化参数选项
