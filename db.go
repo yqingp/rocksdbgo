@@ -175,7 +175,7 @@ func (d *DB) Write(wo *WriteOption, wb *WriteBatch) error {
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
-		return errors.New(fmt.Sprintf("Store Rocksdb [Delete] Error %s", er))
+		return errors.New(fmt.Sprintf("Store Rocksdb [Write] Error %s", er))
 	}
 
 	return nil

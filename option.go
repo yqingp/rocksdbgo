@@ -67,3 +67,24 @@ extern void rocksdb_options_set_compaction_style(rocksdb_options_t*, int);
 func (o *Option) SetCompactionStyle(t int) {
 	C.rocksdb_options_set_compaction_style(o.option, C.int(t))
 }
+
+/*
+extern void rocksdb_options_optimize_for_point_lookup(
+    rocksdb_options_t* opt, uint64_t block_cache_size_mb);
+*/
+func (o *Option) OptimizeForPointLookup(size uint64) {
+	C.rocksdb_options_optimize_for_point_lookup(o.option, C.uint64_t(size))
+}
+
+/*
+extern void rocksdb_options_optimize_level_style_compaction(
+    rocksdb_options_t* opt, uint64_t memtable_memory_budget);
+*/
+func (o *Option) OptimizeLevelStyleCompaction(size uint64) {
+	C.rocksdb_options_optimize_level_style_compaction(o.option, C.uint64_t(size))
+}
+
+/*
+extern void rocksdb_options_optimize_universal_style_compaction(
+    rocksdb_options_t* opt, uint64_t memtable_memory_budget);
+*/
