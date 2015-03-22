@@ -1,8 +1,17 @@
 # go-rocksdb
 
+##安装
+	go get github.com/yqingp/rocksdbgo
+
 
 ##使用
 ```go
+import (
+	"fmt"
+	"os"
+	. github.com/yqingp/rocksdbgo
+)
+
 db, err := Open("./a", nil)
 db.Put(nil, []byte("a1"), []byte("v"))
 db.Put(nil, []byte("a2"), []byte("v"))
