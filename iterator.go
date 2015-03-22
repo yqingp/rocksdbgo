@@ -114,6 +114,24 @@ func (i *Iterator) Next() (string, bool) {
 		return v, true
 	}
 
+	i.Move()
+	if !i.valid() {
+		return "", false
+	}
+
+	v := i.Value()
+
+	if i.end != "" {
+		if i.forward && bytes.Compare([]byte(v), []byte(i.end)) < 0 {
+			return v, true
+		}
+		if !i.forward && bytes.Compare([]byte(v), []byte(i.end)) > 0 {
+			return v, true
+		}
+
+	}
+
+	return "", false
 }
 
 /*
@@ -157,11 +175,22 @@ func (i *Iterator) Close() {
 }
 
 /*
- */
+extern void rocksdb_iter_next(rocksdb_iterator_t*);
+extern void rocksdb_iter_prev(rocksdb_iterator_t*);
+*/
+func (i *Iterator) Move() {
+	if i.isFirst {
+		i.isFirst = false
+	}
+
+	if i.forward {
+		C.rocksdb_iter_next(i.Iterator)
+	} else {
+		C.rocksdb_iter_prev(i.Iterator)
+	}
+}
 
 /*
 extern void rocksdb_iter_destroy(rocksdb_iterator_t*);
-extern void rocksdb_iter_next(rocksdb_iterator_t*);
-extern void rocksdb_iter_prev(rocksdb_iterator_t*);
 extern void rocksdb_iter_get_error(const rocksdb_iterator_t*, char** errptr);
 */
