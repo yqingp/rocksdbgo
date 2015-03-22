@@ -31,16 +31,6 @@ func (o *Option) Close() {
 	}
 }
 
-// extern void rocksdb_options_set_create_if_missing(rocksdb_options_t*, unsigned char);
-func (o *Option) SetCreateIfMissing(b bool) {
-	t := 0
-	if b {
-		t = 1
-	}
-
-	C.rocksdb_options_set_create_if_missing(o.option, C.uchar(t))
-}
-
 /*
 extern void rocksdb_options_set_compression(rocksdb_options_t*, int);
 enum {
@@ -88,3 +78,103 @@ func (o *Option) OptimizeLevelStyleCompaction(size uint64) {
 extern void rocksdb_options_optimize_universal_style_compaction(
     rocksdb_options_t* opt, uint64_t memtable_memory_budget);
 */
+func (o *Option) OptimizeUniversalStyleCompaction(size uint64) {
+	C.rocksdb_options_optimize_universal_style_compaction(o.option, C.uint64_t(size))
+}
+
+/*
+extern void rocksdb_options_set_compression_per_level(
+  rocksdb_options_t* opt,
+  int* level_values,
+  size_t num_levels);
+*/
+func (o *Option) SetCompressionPerLevel(levelValues int, numLevels int) {
+	l := C.int(levelValues)
+	C.rocksdb_options_set_compression_per_level(o.option, &l, C.size_t(numLevels))
+}
+
+/*
+extern void rocksdb_options_set_create_if_missing(rocksdb_options_t*, unsigned char);
+*/
+func (o *Option) SetCreateIfMissing(b bool) {
+	t := 0
+	if b {
+		t = 1
+	}
+
+	C.rocksdb_options_set_create_if_missing(o.option, C.uchar(t))
+}
+
+/*
+extern void rocksdb_options_set_create_missing_column_families(
+    rocksdb_options_t*, unsigned char);
+*/
+func (o *Option) SetCreateMissingColumnFamilies(b bool) {
+	t := C.uchar(0)
+	if b {
+		t = C.uchar(1)
+	}
+
+	C.rocksdb_options_set_create_missing_column_families(o.option, t)
+}
+
+/*
+extern void rocksdb_options_set_error_if_exists(
+    rocksdb_options_t*, unsigned char);
+*/
+func (o *Option) SetErrorIfExists(b bool) {
+	t := C.uchar(0)
+	if b {
+		t = C.uchar(1)
+	}
+
+	C.rocksdb_options_set_error_if_exists(o.option, t)
+}
+
+/*
+extern void rocksdb_options_set_paranoid_checks(
+    rocksdb_options_t*, unsigned char);
+*/
+func (o *Option) SetParanoidChecks(b bool) {
+	t := C.uchar(0)
+	if b {
+		t = C.uchar(1)
+	}
+
+	C.rocksdb_options_set_paranoid_checks(o.option, t)
+}
+
+/*
+extern void rocksdb_options_set_env(rocksdb_options_t*, rocksdb_env_t*);
+*/
+func (o *Option) SetEnv(env *Env) {
+	C.rocksdb_options_set_env(o.option, env.env)
+}
+
+/*
+extern void rocksdb_options_set_write_buffer_size(rocksdb_options_t*, size_t);
+*/
+func (o *Option) SetWriteBufferSize(size uint32) {
+	C.rocksdb_options_set_write_buffer_size(o.option, C.size_t(size))
+}
+
+/*
+extern void rocksdb_options_set_max_open_files(rocksdb_options_t*, int);
+*/
+func (o *Option) SetMaxOpenFiles(size int) {
+	C.rocksdb_options_set_max_open_files(o.option, C.int(size))
+}
+
+/*
+extern void rocksdb_options_set_max_total_wal_size(rocksdb_options_t* opt, uint64_t n);
+*/
+func (o *Option) SetMaxTotalWalSize(size uint64) {
+	C.rocksdb_options_set_max_total_wal_size(o.option, C.uint64_t(size))
+}
+
+/*
+extern void rocksdb_options_set_num_levels(rocksdb_options_t*, int);
+*/
+func (o *Option) SetNumLevels(level int) {
+	C.rocksdb_options_set_num_levels(o.option, C.int(level))
+}
