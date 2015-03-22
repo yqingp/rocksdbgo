@@ -8,20 +8,20 @@ package rocksdbgo
 import "C"
 
 type FlushOption struct {
-	Option *C.rocksdb_flushoptions_t
+	flushOption *C.rocksdb_flushoptions_t
 }
 
 // extern rocksdb_flushoptions_t* rocksdb_flushoptions_create();
 func NewFlushOption() *FlushOption {
 	return &FlushOption{
-		Option: C.rocksdb_flushoptions_create(),
+		flushOption: C.rocksdb_flushoptions_create(),
 	}
 }
 
 // extern void rocksdb_flushoptions_destroy(rocksdb_flushoptions_t*);
 func (f *FlushOption) Close() {
-	if f.Option != nil {
-		C.rocksdb_flushoptions_destroy(f.Option)
+	if f.flushOption != nil {
+		C.rocksdb_flushoptions_destroy(f.flushOption)
 	}
 }
 
@@ -32,5 +32,5 @@ func (f *FlushOption) SetWait(b bool) {
 		t = 1
 	}
 
-	C.rocksdb_flushoptions_set_wait(f.Option, C.uchar(t))
+	C.rocksdb_flushoptions_set_wait(f.flushOption, C.uchar(t))
 }

@@ -8,26 +8,26 @@ package rocksdbgo
 import "C"
 
 type Option struct {
-	Option *C.rocksdb_options_t
+	option *C.rocksdb_options_t
 }
 
 // extern rocksdb_options_t* rocksdb_options_create();
 func NewOption() *Option {
 	opt := &Option{}
-	opt.Option = C.rocksdb_options_create()
+	opt.option = C.rocksdb_options_create()
 
 	return opt
 }
 
 // extern void rocksdb_options_increase_parallelism(rocksdb_options_t* opt, int total_threads);
 func (o *Option) IncreaseParallelism(n int) {
-	C.rocksdb_options_increase_parallelism(o.Option, C.int(n))
+	C.rocksdb_options_increase_parallelism(o.option, C.int(n))
 }
 
 // extern void rocksdb_options_destroy(rocksdb_options_t*);
 func (o *Option) Close() {
-	if o.Option != nil {
-		C.rocksdb_options_destroy(o.Option)
+	if o.option != nil {
+		C.rocksdb_options_destroy(o.option)
 	}
 }
 
@@ -38,7 +38,7 @@ func (o *Option) SetCreateIfMissing(b bool) {
 		t = 1
 	}
 
-	C.rocksdb_options_set_create_if_missing(o.Option, C.uchar(t))
+	C.rocksdb_options_set_create_if_missing(o.option, C.uchar(t))
 }
 
 /*
@@ -53,7 +53,7 @@ enum {
 };
 */
 func (o *Option) SetCompression(t int) {
-	C.rocksdb_options_set_compression(o.Option, C.int(t))
+	C.rocksdb_options_set_compression(o.option, C.int(t))
 }
 
 /*
@@ -65,5 +65,5 @@ enum {
 extern void rocksdb_options_set_compaction_style(rocksdb_options_t*, int);
 */
 func (o *Option) SetCompactionStyle(t int) {
-	C.rocksdb_options_set_compaction_style(o.Option, C.int(t))
+	C.rocksdb_options_set_compaction_style(o.option, C.int(t))
 }

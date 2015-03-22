@@ -8,21 +8,21 @@ package rocksdbgo
 import "C"
 
 type ReadOption struct {
-	Option *C.rocksdb_readoptions_t
+	readOption *C.rocksdb_readoptions_t
 }
 
 // extern rocksdb_readoptions_t* rocksdb_readoptions_create();
 func NewReadOption() *ReadOption {
 	opt := &ReadOption{}
-	opt.Option = C.rocksdb_readoptions_create()
+	opt.readOption = C.rocksdb_readoptions_create()
 
 	return opt
 }
 
 // extern void rocksdb_readoptions_destroy(rocksdb_readoptions_t*);
 func (r *ReadOption) Close() {
-	if r.Option != nil {
-		C.rocksdb_readoptions_destroy(r.Option)
+	if r.readOption != nil {
+		C.rocksdb_readoptions_destroy(r.readOption)
 	}
 }
 
@@ -32,7 +32,7 @@ func (r *ReadOption) SetVerifyChecksums(b bool) {
 	if b {
 		t = 1
 	}
-	C.rocksdb_readoptions_set_verify_checksums(r.Option, C.uchar(t))
+	C.rocksdb_readoptions_set_verify_checksums(r.readOption, C.uchar(t))
 }
 
 // TODO:

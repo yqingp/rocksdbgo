@@ -14,11 +14,11 @@ import (
 )
 
 type DB struct {
-	Rocksdb            *C.rocksdb_t
-	DefaultWriteOption *WriteOption
-	DefaultReadOption  *ReadOption
-	Option             *Option
-	FlashOption        *FlushOption
+	rocksdb            *C.rocksdb_t
+	defaultWriteOption *WriteOption
+	defaultReadOption  *ReadOption
+	option             *Option
+	flashOption        *FlushOption
 }
 
 func Open(dbpath string, option *Option) (*DB, error) {
@@ -30,19 +30,19 @@ func Open(dbpath string, option *Option) (*DB, error) {
 	var errInfo *C.char
 
 	if option == nil {
-		db.Option = NewOption()
-		db.Option.SetCreateIfMissing(true)
+		db.option = NewOption()
+		db.option.SetCreateIfMissing(true)
 	}
 
-	db.Rocksdb = C.rocksdb_open(db.Option.Option, dbpathCstring, &errInfo)
+	db.rocksdb = C.rocksdb_open(db.option.option, dbpathCstring, &errInfo)
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
 		return nil, errors.New(fmt.Sprintf("Store Rocksdb [Open] Error %s", er))
 	}
 
-	db.DefaultReadOption = NewReadOption()
-	db.DefaultWriteOption = NewWriteOption()
+	db.defaultReadOption = NewReadOption()
+	db.defaultWriteOption = NewWriteOption()
 
 	return db, nil
 }
@@ -56,12 +56,12 @@ func (this *DB) Put(wo *WriteOption, key []byte, value []byte) error {
 		C.free(unsafe.Pointer(v))
 	}()
 
-	w := this.DefaultWriteOption.Option
+	w := this.defaultWriteOption.writeOption
 	if wo != nil {
-		w = wo.Option
+		w = wo.writeOption
 	}
 
-	C.rocksdb_put(this.Rocksdb, w, k, C.size_t(len(key)), v, C.size_t(len(value)), &errInfo)
+	C.rocksdb_put(this.rocksdb, w, k, C.size_t(len(key)), v, C.size_t(len(value)), &errInfo)
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
@@ -78,12 +78,12 @@ func (this *DB) Get(ro *ReadOption, key []byte) ([]byte, error) {
 	k := C.CString(string(key))
 	defer C.free(unsafe.Pointer(k))
 
-	r := this.DefaultReadOption.Option
+	r := this.defaultReadOption.readOption
 	if ro != nil {
-		r = ro.Option
+		r = ro.readOption
 	}
 
-	value = C.rocksdb_get(this.Rocksdb, r, k, C.size_t(len(key)), &l, &errInfo)
+	value = C.rocksdb_get(this.rocksdb, r, k, C.size_t(len(key)), &l, &errInfo)
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
@@ -102,12 +102,12 @@ func (this *DB) Delete(wo *WriteOption, key []byte) error {
 	k := C.CString(string(key))
 	defer C.free(unsafe.Pointer(k))
 
-	w := this.DefaultWriteOption.Option
+	w := this.defaultWriteOption.writeOption
 	if wo != nil {
-		w = wo.Option
+		w = wo.writeOption
 	}
 
-	C.rocksdb_delete(this.Rocksdb, w, k, l, &errInfo)
+	C.rocksdb_delete(this.rocksdb, w, k, l, &errInfo)
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
@@ -118,11 +118,11 @@ func (this *DB) Delete(wo *WriteOption, key []byte) error {
 }
 
 func (this *DB) Close() {
-	this.DefaultWriteOption.Close()
-	this.DefaultReadOption.Close()
-	this.Option.Close()
+	this.defaultReadOption.Close()
+	this.defaultWriteOption.Close()
+	this.option.Close()
 	// this.FlashOption.Close()
-	C.rocksdb_close(this.Rocksdb)
+	C.rocksdb_close(this.rocksdb)
 }
 
 func (d *DB) String() string {
@@ -131,13 +131,13 @@ func (d *DB) String() string {
 
 // extern void rocksdb_flush(rocksdb_t* db,const rocksdb_flushoptions_t* options,char** errptr);
 func (d *DB) Flush() error {
-	if d.FlashOption == nil {
+	if d.flashOption == nil {
 		return errors.New("undefined FlashOption")
 	}
 
 	var errInfo *C.char
 
-	C.rocksdb_flush(d.Rocksdb, d.FlashOption.Option, &errInfo)
+	C.rocksdb_flush(d.rocksdb, d.flashOption.flushOption, &errInfo)
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
@@ -148,7 +148,7 @@ func (d *DB) Flush() error {
 }
 
 func (d *DB) NewIterator(ro *ReadOption, forward bool, start string, end string) *Iterator {
-	r := d.DefaultReadOption
+	r := d.defaultReadOption
 	if ro != nil {
 		r = ro
 	}
@@ -166,12 +166,12 @@ extern void rocksdb_write(
 func (d *DB) Write(wo *WriteOption, wb *WriteBatch) error {
 	var errInfo *C.char
 
-	w := d.DefaultWriteOption.Option
+	w := d.defaultWriteOption.writeOption
 	if wo != nil {
-		w = wo.Option
+		w = wo.writeOption
 	}
 
-	C.rocksdb_write(d.Rocksdb, w, wb.writeBatch, &errInfo)
+	C.rocksdb_write(d.rocksdb, w, wb.writeBatch, &errInfo)
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)

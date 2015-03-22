@@ -8,21 +8,21 @@ package rocksdbgo
 import "C"
 
 type WriteOption struct {
-	Option *C.rocksdb_writeoptions_t
+	writeOption *C.rocksdb_writeoptions_t
 }
 
 // extern rocksdb_writeoptions_t* rocksdb_writeoptions_create();
 func NewWriteOption() *WriteOption {
 	opt := &WriteOption{}
-	opt.Option = C.rocksdb_writeoptions_create()
+	opt.writeOption = C.rocksdb_writeoptions_create()
 
 	return opt
 }
 
 // extern void rocksdb_writeoptions_destroy(rocksdb_writeoptions_t*);
 func (w *WriteOption) Close() {
-	if w.Option != nil {
-		C.rocksdb_writeoptions_destroy(w.Option)
+	if w.writeOption != nil {
+		C.rocksdb_writeoptions_destroy(w.writeOption)
 
 	}
 }
@@ -34,10 +34,10 @@ func (w *WriteOption) SetSync(b bool) {
 		t = 1
 	}
 
-	C.rocksdb_writeoptions_set_sync(w.Option, C.uchar(t))
+	C.rocksdb_writeoptions_set_sync(w.writeOption, C.uchar(t))
 }
 
 // extern void rocksdb_writeoptions_disable_WAL(rocksdb_writeoptions_t* opt, int disable);
 func (w *WriteOption) DisableWal(disable int) {
-	C.rocksdb_writeoptions_disable_WAL(w.Option, C.int(disable))
+	C.rocksdb_writeoptions_disable_WAL(w.writeOption, C.int(disable))
 }
