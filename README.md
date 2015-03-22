@@ -46,3 +46,5 @@ os.RemoveAll("./a")
 	添加write_batch操作
 	添加更多测试
 	添加其他优化参数选项
+
+	添加API文档支持
