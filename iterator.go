@@ -24,6 +24,11 @@ type Iterator struct {
 	isFirst   bool
 }
 
+type Itval struct {
+	K string
+	V string
+}
+
 /*
 extern rocksdb_iterator_t* rocksdb_create_iterator(
     rocksdb_t* db,
@@ -93,46 +98,48 @@ func (i *Iterator) ResetDirection() {
 	}
 }
 
-func (i *Iterator) Next() (string, bool) {
+func (i *Iterator) Next() (Itval, bool) {
 	if !i.valid() {
-		return "", false
+		return Itval{}, false
 	}
 
+	k := i.Key()
+	v := i.Value()
+
+	itval := Itval{K: k, V: v}
+
 	if i.isFirst {
-		v := i.Value()
-
 		if i.end != "" {
-			if i.forward && bytes.Compare([]byte(v), []byte(i.end)) < 0 {
-				return v, true
+			if i.forward && bytes.Compare([]byte(k), []byte(i.end)) < 0 {
+				i.Move()
+				return itval, true
 			}
-			if !i.forward && bytes.Compare([]byte(v), []byte(i.end)) > 0 {
-				return v, true
+			if !i.forward && bytes.Compare([]byte(k), []byte(i.end)) > 0 {
+				i.Move()
+				return itval, true
 			}
 
-			return "", false
+			return Itval{}, false
 		}
 
-		return v, true
+		i.Move()
+		return itval, true
+	}
+
+	if i.end != "" {
+		if i.forward && bytes.Compare([]byte(k), []byte(i.end)) < 0 {
+			i.Move()
+			return itval, true
+		}
+		if !i.forward && bytes.Compare([]byte(k), []byte(i.end)) > 0 {
+			i.Move()
+			return itval, true
+		}
+		return Itval{}, false
 	}
 
 	i.Move()
-	if !i.valid() {
-		return "", false
-	}
-
-	v := i.Value()
-
-	if i.end != "" {
-		if i.forward && bytes.Compare([]byte(v), []byte(i.end)) < 0 {
-			return v, true
-		}
-		if !i.forward && bytes.Compare([]byte(v), []byte(i.end)) > 0 {
-			return v, true
-		}
-
-	}
-
-	return "", false
+	return itval, true
 }
 
 /*
@@ -152,7 +159,7 @@ func (i *Iterator) Key() string {
 		return ""
 	}
 
-	return C.GoString(k)
+	return string(C.GoBytes(unsafe.Pointer(k), C.int(l)))
 }
 
 /*
@@ -165,7 +172,7 @@ func (i *Iterator) Value() string {
 		return ""
 	}
 
-	return C.GoString(v)
+	return string(C.GoBytes(unsafe.Pointer(v), C.int(l)))
 }
 
 /*

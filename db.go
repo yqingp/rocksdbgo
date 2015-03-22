@@ -121,7 +121,7 @@ func (this *DB) Close() {
 	this.DefaultWriteOption.Close()
 	this.DefaultReadOption.Close()
 	this.Option.Close()
-	this.FlashOption.Close()
+	// this.FlashOption.Close()
 	C.rocksdb_close(this.Rocksdb)
 }
 

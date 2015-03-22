@@ -3,6 +3,7 @@ package rocksdbgo
 import (
 	// "bytes"
 	// "strings"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -43,16 +44,26 @@ func TestIterator(t *testing.T) {
 		t.Errorf("db open error: %s", err)
 	}
 
-	w := NewWriteOption()
-	db.Put(w, []byte("a1"), []byte("v"))
-	// db.Put(nil, []byte("a2"), []byte("v"))
-	// db.Put(nil, []byte("a3"), []byte("v"))
+	db.Put(nil, []byte("a1"), []byte("v"))
+	db.Put(nil, []byte("a2"), []byte("v"))
+	db.Put(nil, []byte("a3"), []byte("v"))
 
-	// db.Put(nil, []byte("b1"), []byte("v"))
-	// db.Put(nil, []byte("c1"), []byte("v"))
-	// db.Put(nil, []byte("d1"), []byte("v"))
-	// db.Put(nil, []byte("d2"), []byte("v"))
+	db.Put(nil, []byte("b1"), []byte("v"))
+	db.Put(nil, []byte("c1"), []byte("v"))
+	db.Put(nil, []byte("d1"), []byte("v"))
+	db.Put(nil, []byte("d2"), []byte("v"))
 
-	os.RemoveAll("./a")
+	it := db.NewIterator(nil, true, "", "")
+	// it := db.NewIterator(nil, false, "", "")
+
+	for {
+		if v, valid := it.Next(); valid {
+			fmt.Println(v)
+		} else {
+			break
+		}
+	}
+	it.Close()
 	db.Close()
+	os.RemoveAll("./a")
 }
