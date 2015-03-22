@@ -21,7 +21,9 @@ func NewReadOption() *ReadOption {
 
 // extern void rocksdb_readoptions_destroy(rocksdb_readoptions_t*);
 func (r *ReadOption) Close() {
-	C.rocksdb_readoptions_destroy(r.Option)
+	if r.Option != nil {
+		C.rocksdb_readoptions_destroy(r.Option)
+	}
 }
 
 // extern void rocksdb_readoptions_set_verify_checksums(rocksdb_readoptions_t*, unsigned char);

@@ -9,6 +9,7 @@ import "C"
 
 import (
 	"bytes"
+	"unsafe"
 )
 
 type Iterator struct {
@@ -16,10 +17,10 @@ type Iterator struct {
 	forward   bool
 	start     string
 	startChar *C.char
-	startLen  *C.size_t
+	startLen  C.size_t
 	end       string
 	endChar   *C.char
-	endLen    *C.size_t
+	endLen    C.size_t
 	isFirst   bool
 }
 
@@ -29,7 +30,7 @@ extern rocksdb_iterator_t* rocksdb_create_iterator(
     const rocksdb_readoptions_t* options);
 */
 func newIterator(db *DB, ro *ReadOption, forward bool, start string, end string) *Iterator {
-	i := Iterator{
+	i := &Iterator{
 		Iterator: C.rocksdb_create_iterator(db.Rocksdb, ro.Option),
 	}
 
@@ -64,7 +65,7 @@ func (i *Iterator) Backward() {
 extern void rocksdb_iter_seek(rocksdb_iterator_t*, const char* k, size_t klen);
 */
 func (i *Iterator) seek() {
-	C.rocksdb_iter_seek(i.Iterator, i.startChar)
+	C.rocksdb_iter_seek(i.Iterator, i.startChar, i.startLen)
 }
 
 func (i *Iterator) Start(start string) {
@@ -147,7 +148,7 @@ extern const char* rocksdb_iter_key(const rocksdb_iterator_t*, size_t* klen);
 func (i *Iterator) Key() string {
 	var l C.size_t
 	k := C.rocksdb_iter_key(i.Iterator, &l)
-	if kdata == nil {
+	if k == nil {
 		return ""
 	}
 
@@ -171,7 +172,16 @@ func (i *Iterator) Value() string {
 extern void rocksdb_iter_destroy(rocksdb_iterator_t*);
 */
 func (i *Iterator) Close() {
-	C.rocksdb_iter_destroy(i.Iterator)
+	if i.Iterator != nil {
+		C.rocksdb_iter_destroy(i.Iterator)
+	}
+	if i.startChar != nil {
+		C.free(unsafe.Pointer(i.startChar))
+	}
+
+	if i.endChar != nil {
+		C.free(unsafe.Pointer(i.endChar))
+	}
 }
 
 /*

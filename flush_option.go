@@ -20,7 +20,9 @@ func NewFlushOption() *FlushOption {
 
 // extern void rocksdb_flushoptions_destroy(rocksdb_flushoptions_t*);
 func (f *FlushOption) Close() {
-	C.rocksdb_flushoptions_destroy(f.Option)
+	if f.Option != nil {
+		C.rocksdb_flushoptions_destroy(f.Option)
+	}
 }
 
 // extern void rocksdb_flushoptions_set_wait(rocksdb_flushoptions_t*, unsigned char);

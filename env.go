@@ -21,7 +21,9 @@ func NewEnv() *Env {
 
 // extern void rocksdb_env_destroy(rocksdb_env_t*);
 func (e *Env) Close() {
-	C.rocksdb_env_destroy(e.env)
+	if e.env != nil {
+		C.rocksdb_env_destroy(e.env)
+	}
 }
 
 // extern void rocksdb_env_set_background_threads(rocksdb_env_t* env, int n);

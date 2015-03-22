@@ -21,7 +21,10 @@ func NewWriteOption() *WriteOption {
 
 // extern void rocksdb_writeoptions_destroy(rocksdb_writeoptions_t*);
 func (w *WriteOption) Close() {
-	C.rocksdb_writeoptions_destroy(w.Option)
+	if w.Option != nil {
+		C.rocksdb_writeoptions_destroy(w.Option)
+
+	}
 }
 
 // extern void rocksdb_writeoptions_set_sync(rocksdb_writeoptions_t*, unsigned char);

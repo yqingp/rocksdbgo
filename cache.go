@@ -20,5 +20,7 @@ func NewCache(capacity int) *Cache {
 
 // extern void rocksdb_cache_destroy(rocksdb_cache_t* cache);
 func (c *Cache) Close() {
-	C.rocksdb_cache_destroy(c.Cache)
+	if c.Cache != nil {
+		C.rocksdb_cache_destroy(c.Cache)
+	}
 }

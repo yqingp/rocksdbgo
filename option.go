@@ -26,7 +26,9 @@ func (o *Option) IncreaseParallelism(n int) {
 
 // extern void rocksdb_options_destroy(rocksdb_options_t*);
 func (o *Option) Close() {
-	C.rocksdb_options_destroy(o.Option)
+	if o.Option != nil {
+		C.rocksdb_options_destroy(o.Option)
+	}
 }
 
 // extern void rocksdb_options_set_create_if_missing(rocksdb_options_t*, unsigned char);

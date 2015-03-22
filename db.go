@@ -121,6 +121,7 @@ func (this *DB) Close() {
 	this.DefaultWriteOption.Close()
 	this.DefaultReadOption.Close()
 	this.Option.Close()
+	this.FlashOption.Close()
 	C.rocksdb_close(this.Rocksdb)
 }
 
@@ -157,8 +158,8 @@ func (d *DB) Flush() error {
 func (d *DB) NewIterator(ro *ReadOption, forward bool, start string, end string) *Iterator {
 	r := d.DefaultReadOption
 	if ro != nil {
-		r = ReadOption
+		r = ro
 	}
 
-	return newIterator(d, r, forward)
+	return newIterator(d, r, forward, start, end)
 }
