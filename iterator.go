@@ -7,6 +7,10 @@ package rocksdbgo
 */
 import "C"
 
+import (
+	"bytes"
+)
+
 type Iterator struct {
 	Iterator  *C.rocksdb_iterator_t
 	forward   bool
@@ -89,11 +93,27 @@ func (i *Iterator) ResetDirection() {
 }
 
 func (i *Iterator) Next() (string, bool) {
-	if i.isFirst {
-		if i.valid() {
-
-		}
+	if !i.valid() {
+		return "", false
 	}
+
+	if i.isFirst {
+		v := i.Value()
+
+		if i.end != "" {
+			if i.forward && bytes.Compare([]byte(v), []byte(i.end)) < 0 {
+				return v, true
+			}
+			if !i.forward && bytes.Compare([]byte(v), []byte(i.end)) > 0 {
+				return v, true
+			}
+
+			return "", false
+		}
+
+		return v, true
+	}
+
 }
 
 /*
@@ -104,6 +124,32 @@ func (i *Iterator) valid() bool {
 }
 
 /*
+extern const char* rocksdb_iter_key(const rocksdb_iterator_t*, size_t* klen);
+*/
+func (i *Iterator) Key() string {
+	var l C.size_t
+	k := C.rocksdb_iter_key(i.Iterator, &l)
+	if kdata == nil {
+		return ""
+	}
+
+	return C.GoString(k)
+}
+
+/*
+extern const char* rocksdb_iter_value(const rocksdb_iterator_t*, size_t* vlen);
+*/
+func (i *Iterator) Value() string {
+	var l C.size_t
+	v := C.rocksdb_iter_value(i.Iterator, &l)
+	if v == nil {
+		return ""
+	}
+
+	return C.GoString(v)
+}
+
+/*
 extern void rocksdb_iter_destroy(rocksdb_iterator_t*);
 */
 func (i *Iterator) Close() {
@@ -111,10 +157,11 @@ func (i *Iterator) Close() {
 }
 
 /*
+ */
+
+/*
 extern void rocksdb_iter_destroy(rocksdb_iterator_t*);
 extern void rocksdb_iter_next(rocksdb_iterator_t*);
 extern void rocksdb_iter_prev(rocksdb_iterator_t*);
-extern const char* rocksdb_iter_key(const rocksdb_iterator_t*, size_t* klen);
-extern const char* rocksdb_iter_value(const rocksdb_iterator_t*, size_t* vlen);
 extern void rocksdb_iter_get_error(const rocksdb_iterator_t*, char** errptr);
 */
