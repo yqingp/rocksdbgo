@@ -129,10 +129,6 @@ func (d *DB) String() string {
 	return ""
 }
 
-// extern void rocksdb_delete_file(rocksdb_t* db, const char* name);
-
-// extern const rocksdb_livefiles_t* rocksdb_livefiles(rocksdb_t* db);
-
 // extern void rocksdb_flush(rocksdb_t* db,const rocksdb_flushoptions_t* options,char** errptr);
 func (d *DB) Flush() error {
 	if d.FlashOption == nil {
@@ -151,10 +147,6 @@ func (d *DB) Flush() error {
 	return nil
 }
 
-// extern void rocksdb_disable_file_deletions(rocksdb_t* db,char** errptr);
-
-// extern void rocksdb_enable_file_deletions(rocksdb_t* db,unsigned char force, char** errptr);
-
 func (d *DB) NewIterator(ro *ReadOption, forward bool, start string, end string) *Iterator {
 	r := d.DefaultReadOption
 	if ro != nil {
@@ -162,4 +154,29 @@ func (d *DB) NewIterator(ro *ReadOption, forward bool, start string, end string)
 	}
 
 	return newIterator(d, r, forward, start, end)
+}
+
+/*
+extern void rocksdb_write(
+    rocksdb_t* db,
+    const rocksdb_writeoptions_t* options,
+    rocksdb_writebatch_t* batch,
+    char** errptr);
+*/
+func (d *DB) Write(wo *WriteOption, wb *WriteBatch) error {
+	var errInfo *C.char
+
+	w := d.DefaultWriteOption.Option
+	if wo != nil {
+		w = wo.Option
+	}
+
+	C.rocksdb_write(d.Rocksdb, w, wb.writeBatch, &errInfo)
+
+	if errInfo != nil {
+		er := C.GoString(errInfo)
+		return errors.New(fmt.Sprintf("Store Rocksdb [Delete] Error %s", er))
+	}
+
+	return nil
 }
