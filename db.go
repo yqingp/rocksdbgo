@@ -38,7 +38,7 @@ func Open(dbpath string, option *Option) (*DB, error) {
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
-		return nil, errors.New(fmt.Sprintf("Store Rocksdb [Open] Error %s", er))
+		return nil, fmt.Errorf("Rocksdb [Error] %s", er)
 	}
 
 	db.defaultReadOption = NewReadOption()
@@ -65,7 +65,7 @@ func (this *DB) Put(wo *WriteOption, key []byte, value []byte) error {
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
-		return errors.New(fmt.Sprintf("Store Rocksdb [Put] Error %s", er))
+		return fmt.Errorf("Rocksdb [Error] %s", er)
 	}
 
 	return nil
@@ -87,7 +87,7 @@ func (this *DB) Get(ro *ReadOption, key []byte) ([]byte, error) {
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
-		return nil, errors.New(fmt.Sprintf("Store Rocksdb [Get] Error %s", er))
+		return nil, fmt.Errorf("Rocksdb [Error] %s", er)
 	}
 
 	v := C.GoBytes(unsafe.Pointer(value), C.int(l))
@@ -111,7 +111,7 @@ func (this *DB) Delete(wo *WriteOption, key []byte) error {
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
-		return errors.New(fmt.Sprintf("Store Rocksdb [Delete] Error %s", er))
+		return fmt.Errorf("Rocksdb [Error] %s", er)
 	}
 
 	return nil
@@ -132,7 +132,7 @@ func (d *DB) String() string {
 // extern void rocksdb_flush(rocksdb_t* db,const rocksdb_flushoptions_t* options,char** errptr);
 func (d *DB) Flush() error {
 	if d.flashOption == nil {
-		return errors.New("undefined FlashOption")
+		return fmt.Errorf("Rocksdb [Error] FlushOption Nil")
 	}
 
 	var errInfo *C.char
@@ -175,7 +175,7 @@ func (d *DB) Write(wo *WriteOption, wb *WriteBatch) error {
 
 	if errInfo != nil {
 		er := C.GoString(errInfo)
-		return errors.New(fmt.Sprintf("Store Rocksdb [Write] Error %s", er))
+		return fmt.Errorf("Rocksdb [Error] %s", er)
 	}
 
 	return nil
