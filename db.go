@@ -43,6 +43,7 @@ func Open(dbpath string, option *Option) (*DB, error) {
 
 	db.defaultReadOption = NewReadOption()
 	db.defaultWriteOption = NewWriteOption()
+	db.flashOption = NewFlushOption()
 
 	return db, nil
 }
@@ -121,7 +122,7 @@ func (this *DB) Close() {
 	this.defaultReadOption.Close()
 	this.defaultWriteOption.Close()
 	this.option.Close()
-	// this.FlashOption.Close()
+	this.flashOption.Close()
 	C.rocksdb_close(this.rocksdb)
 }
 
