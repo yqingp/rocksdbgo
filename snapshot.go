@@ -9,7 +9,7 @@ import "C"
 
 type Snapshot struct {
 	snapshot *C.rocksdb_snapshot_t
-	rocksdb  *DB
+	db       *DB
 }
 
 /*
@@ -19,6 +19,6 @@ extern void rocksdb_release_snapshot(
 */
 func (s *Snapshot) Close() {
 	if s.snapshot != nil {
-		C.rocksdb_release_snapshot(s.rocksdb.rocksdb, s.snapshot)
+		C.rocksdb_release_snapshot(s.db.rocksdb, s.snapshot)
 	}
 }
