@@ -181,3 +181,13 @@ func (d *DB) Write(wo *WriteOption, wb *WriteBatch) error {
 
 	return nil
 }
+
+/*
+extern const rocksdb_snapshot_t* rocksdb_create_snapshot(
+    rocksdb_t* db);
+*/
+func (d *DB) CreateSnapshot() *Snapshot {
+	return &Snapshot{
+		snapshot: C.rocksdb_create_snapshot(d.rocksdb),
+	}
+}
